@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta content='text/html; charset=utf-8' http-equiv='Content-Type' />
+  <meta content="noarchive" name="robots" />
+  <meta
+    name="viewport"
+    content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
+  <title>Websocket demo</title>
+</head>
+<body>
+  <script type="text/javascript">
+    let socket = new WebSocket("ws://localhost:8083");
+
+    socket.onopen = function (e) {
+      console.log("[open] Connected");
+      console.log("Sending data...");
+      socket.send(JSON.stringify({
+        'token': 'b025fbb56968d3058d4f177aba29eea8',
+        'data': {
+          'room': "1",
+        }
+      }));
+    };
+
+    socket.onmessage = function (event) {
+      console.log(`[message] Got data: ${event.data}`);
+    };
+
+    socket.onclose = function (event) {
+      if (event.wasClean) {
+        console.log(`[close] Connection closed, code=${event.code} reason=${event.reason}`);
+      } else {
+        // event code 1006 usually
+        console.log('[close] Connection interrupted');
+      }
+    };
+
+    socket.onerror = function (error) {
+      console.log(`[error] ${error.message}`);
+    };
+  </script>
+</body>
+</html>
