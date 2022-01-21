@@ -49,33 +49,13 @@ import ampq_websockets
 class Command(BaseCommand):
     def handle(self, *args, **options):
         logger = logging.getLogger(__name__)
-        logger.info('start django-sockjs-server')
-        self.config = settings.DJANGO_WEBSOCKET_SERVER
-
-        io_loop = tornado.ioloop.IOLoop.instance()
-
-        router = SockJSRouterPika(
-            SockJSConnection,
-            self.config.listen_location,
-            user_settings=self.config.router_settings)
-        app = tornado.web.Application(
-            [
-                (r"/stats/(.*)", StatsHandler, dict(sockjs_server=router._connection.sockjs_server))
-            ] + router.urls)
-
-        app.listen(
-            self.config.listen_port,
-            address=self.config.listen_addr
-        )
-        try:
-            io_loop.start()
-        except KeyboardInterrupt:
-            pass
+        logger.info('start django-websocket-server')
+        ampq_websockets.start(settings.DJANGO_WEBSOCKET_SERVER)
 ```
 
 2. Make DJANGO_WEBSOCKET_SERVER in settings.py. Example:
 ```
-DJANGO_SOCKJS_SERVER = {
+DJANGO_WEBSOCKET_SERVER = {
     'RABBIT_SERVER': {
         'server_host': 'rabbit0',
         'host': 'rabbit0',
