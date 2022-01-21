@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='py-ampq-websocket-server',
-    version='0.1.0',
+    version='0.1.4',
     author='Smirnov.EV',
     author_email='knyazz@gmail.com',
     description='python websockets server using ampq',

@@ -10,10 +10,12 @@ from typing import Optional
 
 from pika.exceptions import ChannelClosed, AMQPConnectionError
 
-from ampq_websockets.settings import (
+from ._settings import (
     RABBIT_SERVER,
     REDIS_SERVER
 )
+
+__all__ = ("RabbitClient", "RedisClient")
 
 TIMEOUT = 5
 TIMEOUT_MESSAGE = f"sockjs-redis: error connect, wait {TIMEOUT} sec"

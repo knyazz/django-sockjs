@@ -1,6 +1,9 @@
 import hashlib
 
-from ampq_websockets.settings import SECRET_KEY
+from ._settings import SECRET_KEY
+
+
+__all__ = ("Token",)
 
 
 class Token:

@@ -6,14 +6,16 @@ import pika
 import websockets
 
 from collections import defaultdict
+from typing import Optional
 from pika.adapters.asyncio_connection import AsyncioConnection
 from websockets import WebSocketServerProtocol
 
-from ampq_websockets.clients import RedisClient
-from ampq_websockets.settings import HOST, PORT, RABBIT_SERVER
-from ampq_websockets._token import Token
+from ._clients import RedisClient
+from ._settings import HOST, PORT, RABBIT_SERVER
+from ._token import Token
 
 
+__all__ = ("start",)
 __author__ = 'smirnov.ev'
 logging.basicConfig(level=logging.INFO)
 
@@ -477,9 +479,9 @@ class Server(RabbitConsumer):
             data['room'] = data['channel']
 
 
-def run():
+def start(custom_config: Optional(dict)) -> None:
     logging.info(f'start websocket-server: {HOST}:{PORT}')
-    server = Server()
+    server = Server(config=custom_config)
     server.run()
     start_server = websockets.serve(server.handler, HOST, PORT)
     loop = asyncio.get_event_loop()
@@ -488,4 +490,4 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    start()
