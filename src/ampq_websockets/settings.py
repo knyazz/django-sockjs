@@ -3,7 +3,6 @@ HOST = "localhost"
 PORT = 8083
 LOCATION = "/ws"
 SECRET_KEY = "NOT_SET"
-URL = f"http://{HOST}:{PORT}{LOCATION}"
 
 RABBIT_SERVER = {
     "USER": "guest",

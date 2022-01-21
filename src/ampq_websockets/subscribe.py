@@ -1,18 +1,19 @@
 import json
 import logging
 
-from token import Token
+from ampq_websockets._token import Token
 
 
 class Subscribe:
 
-    def __init__(self, uid: str, server) -> None:
+    def __init__(self, secret_key: str, uid: str, server) -> None:
         self.uid = uid
         self.conn = server.connections[uid]
         self.server = server
         self.logger = logging.getLogger(__name__)
         self.redis = server.redis_client
         self.host = self.get_host()
+        self.secret_key = secret_key
 
     def get_host(self) -> None:
         return self.server.queue
@@ -25,7 +26,7 @@ class Subscribe:
     def add(self, data: str) -> None:
         try:
             obj = json.loads(data)
-            token = Token()
+            token = Token(self.secret_key)
             self._compat_transform(obj)
             room = obj['data']['room']
 

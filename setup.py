@@ -21,7 +21,7 @@ setuptools.setup(
         'Development Status :: 4 - Beta'
     ],
     install_requires=[
-        'pika>=1.2.0'
+        'pika>=1.2.0',
         'redis>=2.9.1',
         'websockets>=10.1',
     ],

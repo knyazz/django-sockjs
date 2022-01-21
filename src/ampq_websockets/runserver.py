@@ -9,9 +9,9 @@ from collections import defaultdict
 from pika.adapters.asyncio_connection import AsyncioConnection
 from websockets import WebSocketServerProtocol
 
-from _clients import RedisClient
-from _settings import HOST, PORT, RABBIT_SERVER
-from _token import Token
+from ampq_websockets.clients import RedisClient
+from ampq_websockets.settings import HOST, PORT, RABBIT_SERVER
+from ampq_websockets._token import Token
 
 
 __author__ = 'smirnov.ev'
@@ -28,7 +28,7 @@ class RabbitConsumer:
         self.last_reconnect = datetime.datetime.utcnow()
         self.uptime_start = datetime.datetime.utcnow()
 
-        self._config = RABBIT_SERVER
+        self._config = self.config and self.config["RABBIT_SERVER"] or RABBIT_SERVER
         self._connection = None
         self._connected = False
         self._channel = None
@@ -245,7 +245,7 @@ class RabbitConsumer:
         logging.info('Issuing consumer related RPC commands')
         self.add_on_cancel_callback()
         self._consumer_tag = self._channel.basic_consume(
-            self._config["QUEUE_NAME"], self.on_rabbitmq_message)
+            self._config["QUEUE_NAME"], self.on_rabbitmq_message, auto_ack=True)
         self.was_consuming = True
         self._consuming = True
 
@@ -316,12 +316,13 @@ class RabbitConsumer:
 class Server(RabbitConsumer):
 
     def __init__(self, *args, **kwargs):
+        self.config = kwargs.get('config')
         super().__init__(*args, **kwargs)
         self.clients = set()
         self.clients_count = 0
         self.connections = dict()
         self.subscribers = defaultdict(set)
-        self.redis_client = RedisClient()
+        self.redis_client = RedisClient(self.config)
 
     def run(self) -> None:
         """
@@ -331,11 +332,20 @@ class Server(RabbitConsumer):
         self.redis_client.connect()
         self._connection = self.connect()
 
-    def on_rabbitmq_message(self, *args, **kwargs) -> None:
+    def on_rabbitmq_message(
+        self,
+        channel: pika.channel.Channel,
+        method: pika.spec.Basic.Deliver,
+        properties: pika.spec.BasicProperties,
+        body: bytes
+    ) -> None:
         """Called when we receive a message from RabbitMQ"""
-        self.notify_listeners(kwargs["body"])
+        if not body:
+            return
 
-    def notify_listeners(self, event: str) -> None:
+        self.notify_listeners(body)
+
+    def notify_listeners(self, event: bytes) -> None:
         obj = json.loads(event)
 
         logging.debug(f"websocket-server: send message {obj}")
@@ -350,12 +360,12 @@ class Server(RabbitConsumer):
                 })
             )
         else:
-            new_event = json.dumps({'data': obj['data']})
-            ws.send(new_event)
+            message = json.dumps({'data': obj['data']})
+            asyncio.create_task(ws.send(message))
 
     def add_subscriber(self, room: str, ws: WebSocketServerProtocol) -> None:
         try:
-            uid = ws.id
+            uid = str(ws.id)
             self.connections.setdefault(uid, ws)
             client = self.connections[uid]
             self.subscribers[uid].add(room)
@@ -369,7 +379,7 @@ class Server(RabbitConsumer):
             self.redis_client.lrem(
                 room,
                 0,
-                json.dumps({'id': uid, 'host': self.queue})
+                json.dumps({'id': str(uid), 'host': str(self.queue)})
             )
 
         try:
@@ -404,7 +414,7 @@ class Server(RabbitConsumer):
         self.clients_count += 1
         self.clients.add(ws)
         logging.debug(f"websocket-server: ws {repr(ws)} added")
-        logging.info(f"{ws.remote_address} connected.")
+        logging.info(f"{ws.remote_address}({ws.id}) connected.")
 
     def remove_client(self, ws: WebSocketServerProtocol) -> None:
         try:
@@ -419,12 +429,13 @@ class Server(RabbitConsumer):
         self.add_client(ws)
 
     async def unregister(self, ws: WebSocketServerProtocol) -> None:
-        self.remove_subscriber(ws.id)
+        self.remove_subscriber(str(ws.id))
         self.remove_client(ws)
 
     async def distribute(self, ws: WebSocketServerProtocol) -> None:
         async for m in ws:
             await self.subscribe(ws, m)
+            await self.send(m)
 
     async def send(self, message: str) -> None:
         await asyncio.wait([
@@ -440,6 +451,7 @@ class Server(RabbitConsumer):
 
     async def subscribe(self, ws: WebSocketServerProtocol, message: str) -> None:
         try:
+            uid = str(ws.id)
             obj = json.loads(message)
             token = Token()
             self._compat_transform(obj)
@@ -453,8 +465,9 @@ class Server(RabbitConsumer):
 
             self.redis_client.lpush(
                 room,
-                json.dumps({'host': self.queue, 'id': str(ws.id)})
+                json.dumps({'host': str(self.queue), 'id': uid})
             )
+            self.connections[uid] = ws
         except (KeyError, TypeError):
             pass
 

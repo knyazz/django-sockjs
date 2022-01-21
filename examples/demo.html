@@ -19,10 +19,17 @@
       console.log("[open] Connected");
       console.log("Sending data...");
       socket.send(JSON.stringify({
-        'token': 'b025fbb56968d3058d4f177aba29eea8',
-        'data': {
-          'room': "1",
-        }
+        "token": "b025fbb56968d3058d4f177aba29eea8",
+        "host": "ws01",
+        "data": {
+          "event_type": "webshop-notify",
+          "extra": {"count_type": "company"},
+          "object_id": 6418,
+          "content": "<a href=\"/profile/orders/1954/status/\">Show</a><p>Total: 29.42. Paid: no. Phone: 123. Email: knyazz@gmail.com</p>",
+          "parent_object_id": 1954, "message": "You have a new order"
+        },
+        "uid": "71eaba35-f4ef-4dab-9113-0360e6434395",
+        "room": "810"
       }));
     };
 

@@ -12,7 +12,7 @@ Tested on python 3.9.9
 
 ## Installation:
 ```
-pip install sockjs
+pip install py-ampq-websockets-server
 ```
 
 ## Usage:

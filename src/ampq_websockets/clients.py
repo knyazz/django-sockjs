@@ -6,9 +6,11 @@ import pika
 import redis
 import time
 
+from typing import Optional
+
 from pika.exceptions import ChannelClosed, AMQPConnectionError
 
-from _settings import (
+from ampq_websockets.settings import (
     RABBIT_SERVER,
     REDIS_SERVER
 )
@@ -31,8 +33,8 @@ def reconnect_wrapper(func):
 
 
 class RedisClient:
-    def __init__(self):
-        self.config = REDIS_SERVER
+    def __init__(self, config: Optional[dict] = None) -> None:
+        self.config = config and config["REDIS_SERVER"] or REDIS_SERVER
         self.connect_tries = 0
         self.connecting = False
         self.last_reconnect = None
@@ -75,25 +77,25 @@ class RedisClient:
         self.logger.debug(format_string % args)
 
     @reconnect_wrapper
-    def lpush(self, key: str, *args, **kwargs) -> None:
+    def lpush(self, key: str, *args, **kwargs):
         self.log('lpush', key, args, kwargs)
         return self.redis.lpush(self.get_real_key(key), *args, **kwargs)
 
     @reconnect_wrapper
-    def lrange(self, key: str, *args, **kwargs) -> None:
+    def lrange(self, key: str, *args, **kwargs):
         self.log('lrange', key, args, kwargs)
         return self.redis.lrange(self.get_real_key(key), *args, **kwargs)
 
     @reconnect_wrapper
-    def lrem(self, key: str, num: int, value: int) -> None:
+    def lrem(self, key: str, num: int, value: int):
         self.log('lrem', key, num, value)
         return self.redis.lrem(self.get_real_key(key), num, value)
 
 
 class RabbitClient:
-    def __init__(self) -> None:
+    def __init__(self, config: Optional[dict] = None) -> None:
         self.logger = logging.getLogger(__name__)
-        self.config = RABBIT_SERVER
+        self.config = config and config["RABBIT_SERVER"] or RABBIT_SERVER
         self.connected = False
         self.exchange_name = self.config["EXCHANGE_NAME"]
         self.retry_count = 0
@@ -152,7 +154,7 @@ class RabbitClient:
                 time.sleep(100 / 1000000.0)
                 self.publish_message(message, True)
 
-    def publish_message_old(self, message: str) -> None:
+    def publish_message_simply(self, message: str) -> None:
         room = message.pop('channel')
         connections = self.get_connections(room)
         for conn in connections:
