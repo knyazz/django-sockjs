@@ -479,7 +479,7 @@ class Server(RabbitConsumer):
             data['room'] = data['channel']
 
 
-def start(custom_config: Optional(dict)) -> None:
+def start(custom_config: Optional[dict] = None) -> None:
     logging.info(f'start websocket-server: {HOST}:{PORT}')
     server = Server(config=custom_config)
     server.run()
