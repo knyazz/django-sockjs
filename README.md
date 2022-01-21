@@ -57,25 +57,27 @@ class Command(BaseCommand):
 ```
 DJANGO_WEBSOCKET_SERVER = {
     'RABBIT_SERVER': {
-        'server_host': 'rabbit0',
-        'host': 'rabbit0',
-        'user': 'guest',
-        'password': 'guest',
-        'port': 5672,
-        'vhost': '/',
-        'exchange_name': 'sockjs',
-        'queue_name': 'ws01',
-        'exchange_type': 'direct',
+        "USER": "guest",
+        "PASSWORD": "guest",
+        "SERVER": {
+            "HOST": "localhost",
+            "PORT": 5672,
+            "VHOST": "/"
+        },
+        "EXCHANGE_NAME": "sockjs",
+        "EXCHANGE_TYPE": "direct",
+        "QUEUE_NAME": "ws01"
     },
     'REDIS_SERVER': {
-        'host': 'redis0',
-        'port': '6379',
-        'db': 1,
+        "HOST": "localhost",
+        "PORT": 6379,
+        "DB": 0,
+        "PASSWORD": None,
+        "PREFIX": "sockjs:"
     },
-    'listen_addr': '0.0.0.0',
-    'listen_port': 8083,
-    'listen_location': '/ws',
-    'secret_key': 'xe4pa7gysp4phe2rhyd',
-    'sockjs_url': ['ws://localhost:8083/ws']
+    'HOST': '0.0.0.0',
+    'PORT': 8083,
+    'LOCATION': '/ws',
+    'SECRET_KEY': 'PLEASE_SET'
 }
 ```
