@@ -318,7 +318,7 @@ class RabbitConsumer:
 class Server(RabbitConsumer):
 
     def __init__(self, *args, **kwargs):
-        self.config = kwargs.get('config')
+        self.config = kwargs.pop('config', None)
         super().__init__(*args, **kwargs)
         self.clients = set()
         self.clients_count = 0
